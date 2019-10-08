@@ -1,0 +1,40 @@
+
+# 新しいバージョン(現在7.6)をインストールする(7.0系では、yumでのインストール時にエラーが起こる)
+FROM centos:7
+
+# yumのリポジトリを追加(epel, remi)
+RUN yum install -y yum-utils epel-release https://rpms.remirepo.net/enterprise/remi-release-7.rpm && \
+    yum-config-manager --disable epel
+
+# パッケージを追加 (php, php-fpm, 以外は適当に追加した)
+RUN yum install -y --enablerepo=epel,remi-php70 \
+    zip \
+    unzip \
+    php \
+    php-fpm \
+    php-mbstring \
+    php-pear \
+    php-mcrypt \
+    php-cli \
+    php-common \
+    php-json \
+    php-mysqld \
+    php-pdo \
+    php-process \
+    php-xml \
+    php-pecl-mysql.x86_64 \
+    php-devel \
+    php-pecl-zip \
+    php-gd \
+    libwebp-devel \
+    scl-utils
+
+# php-fpmのpidファイルがこのパスに作成される (このディレクトリがないとPIDファイルを作成できない)
+RUN mkdir /run/php-fpm
+
+# php-fpmの設定ファイルをコピー
+# HACK 頻繁に変えるならここでコピーしないで、composeで指定した方がbuildをしなくて済む
+COPY ./php/www.conf /etc/php-fpm.d/www.conf
+
+# php-fpmをフォアグラウンドで開始
+ENTRYPOINT ["/usr/sbin/php-fpm", "-F"]

@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+
+  php_fpm:
+    build: 
+      context: .
+      dockerfile: Dockerfile_php
+    volumes:
+      - "./src:/var/www"
+      # php_fpmに9000番ポートを使用しているが、unixソケットを使用する場合は以下をコメントアウト
+      #- "./temp:/var/php-temp"
+      #- "./php/www.socket.conf:/etc/php-fpm.d/www.conf"
+
+  nginx:
+    image: nginx
+    volumes:
+      - ./src:/var/www
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf
+      # php_fpmにunixソケットを使用する場合は以下をコメントアウト, nginx/conf.d/default.confを修正
+      #- ./temp:/var/php-temp
+    ports:
+      - "80:80"
+    depends_on:
+      - php_fpm
+    links:
+      - php_fpm
+
